@@ -185,7 +185,7 @@ export class MastodonService {
 
         const route = `https://${account.instance}${searchRoute}?q=${query}&resolve=${resolve}`;
         const headers = new HttpHeaders({ 'Authorization': `Bearer ${account.token.access_token}` });
-        return this.httpClient.get<Results>(route, { headers: headers }).toPromise()
+        const getResult = () => this.httpClient.get<Results>(route, { headers: headers }).toPromise()
             .then((result: Results) => {
                 if (version === 'v2') {
                     result = {
@@ -196,6 +196,17 @@ export class MastodonService {
                 }
                 return result;
             });
+        let tryCount = 0;
+        const maxTries = 3;
+        return getResult().then(result => {
+            tryCount++;
+            if (tryCount > maxTries) return result;
+            if ((result.statuses.length + result.accounts.length + result.hashtags.length) === 0) {
+                return getResult();
+            } else {
+                return result
+            }
+        })
     }
 
     getAccountStatuses(account: AccountInfo, targetAccountId: number, onlyMedia: boolean, onlyPinned: boolean, excludeReplies: boolean, maxId: string, sinceId: string, limit: number = 20): Promise<Status[]> {
