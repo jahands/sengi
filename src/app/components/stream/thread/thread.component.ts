@@ -42,7 +42,7 @@ export class ThreadComponent extends BrowseBase {
     set currentThread(thread: OpenThreadEvent) {
         if (thread) {
             this.lastThreadEvent = thread;
-            this.getThread(thread);
+            this.retrieveThread(thread.sourceAccount, (async () => thread.status)());
         }
     }
 
